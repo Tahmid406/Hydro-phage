@@ -28,7 +28,7 @@ Each agent is an autonomous creature with:
 - **Decision Making** – Chooses to wander, eat, drink, or rest based on needs
 
 <!-- Add: labeled image showing what object is which -->
-![Object Guide](./images/objects_labeled.png)
+![Object Guide](./showcase/Objects.jpg)
 
 ---
 
@@ -43,7 +43,7 @@ Each agent is an autonomous creature with:
 ### Behavior System
 
 <!-- Add: Flowchart of agent AI here -->
-![Agent Behavior Flow](./images/agent_ai_flow.png)
+![Agent Behavior Flow](./showcase/AI.png)
 
 Agents follow a simple yet effective behavior logic:
 
