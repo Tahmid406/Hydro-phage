@@ -107,10 +107,10 @@ function trySelectEntity() {
     closestObject.debug = true;
     if (closestObject instanceof Agent) {
       currentlySelectedAgent = closestObject;
-      console.log("Selected Agent:", closestObject);
+      // console.log("Selected Agent:", closestObject);
     } else if (closestObject instanceof Plant) {
       currentlySelectedPlant = closestObject;
-      console.log("Selected plant:", closestObject);
+      // console.log("Selected plant:", closestObject);
     }
   }
 

@@ -68,6 +68,7 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.2);
   position: relative;
 }
+
 .bar-container::after {
   content: "";
   position: absolute;
@@ -82,6 +83,7 @@ body {
 #hunger-bar-container::after {
   left: 50%;
 }
+
 #thirst-bar-container::after {
   left: 25%;
 }
@@ -123,6 +125,7 @@ body {
   background: linear-gradient(90deg, #33cc33, #66cc33, #88cc33);
   box-shadow: 0 0 10px rgba(51, 204, 51, 0.4); /* softer green glow */
 }
+
 .thirst-bar {
   background: linear-gradient(90deg, #4444ff, #44aaff, #44ffff);
   box-shadow: 0 0 10px rgba(68, 68, 255, 0.5);
@@ -175,16 +178,6 @@ body {
 
 .status-inactive {
   background: #666;
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
 }
 
 .demo-controls {
@@ -265,4 +258,25 @@ body {
 #statsChart {
   max-width: 280px;
   max-height: 170px;
+}
+
+/* Hide sidepanel and toggle button on tablets and mobile devices */
+@media (max-width: 768px) {
+  .sidepanel {
+    display: none;
+  }
+
+  .toggle-btn {
+    display: none;
+  }
+
+  .stats-graph-container {
+    width: 220px;
+    height: 140px;
+  }
+
+  #statsChart {
+    max-width: 200px;
+    max-height: 120px;
+  }
 }

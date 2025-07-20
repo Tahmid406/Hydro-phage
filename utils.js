@@ -168,7 +168,6 @@ function updateAllAgents() {
         const breakDist = 1000;
         let dx = agent.pos.x - agent.waterMemo.pos.x;
         let dy = agent.pos.y - agent.waterMemo.pos.y;
-        console.log(dx * dx + dy * dy);
 
         if (dx * dx + dy * dy > breakDist * breakDist) agent.waterMemo = null;
       }
