@@ -37,6 +37,8 @@ function draw() {
   background(30);
   currentMillis = millis();
 
+  handleArrowKeyPanning();
+
   // Center and apply zoom + offset
   translate(width / 2, height / 2);
   scale(zoom);

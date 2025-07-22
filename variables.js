@@ -5,6 +5,10 @@ let offset = { x: 0, y: 0 };
 let arenaWidth, arenaHeight;
 let currentMillis = 0;
 
+let arrowKeys = { left: false, right: false, up: false, down: false };
+let arrowPanSpeed = 3; // speed per frame (can adjust)
+let movedSinceLastUpdate = 0;
+
 //===== Click Settings =====
 let isDragging = false;
 let clickStart = { x: 0, y: 0 };
@@ -13,7 +17,7 @@ let lastMouse = { x: 0, y: 0 };
 let clickThreshold = 10;
 
 //===== Entity Settings =====
-const totalAgents = 8;
+const totalAgents = 16;
 const agentCleanupInterval = 5000;
 let agents = [];
 let lastAgentCleanupTime = 0;
