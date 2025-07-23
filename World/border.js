@@ -18,7 +18,6 @@ function drawHexBorder() {
 
   // Main border
   stroke(100, 100, 100, 10);
-  strokeWeight(4);
   rect(0, 0, arenaWidth, arenaHeight);
 }
 

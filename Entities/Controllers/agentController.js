@@ -3,17 +3,24 @@ function updateAllAgents() {
     agent.update();
     if (agent.currentGrid.isInView) agent.draw();
   });
+
   if (currentMillis - lastAgentCleanupTime > agentCleanupInterval) {
     for (let agent of agents) {
       agent.refreshTarget();
       agent.age += 1;
 
       // --- Reproduction Logic ---
-      if (
-        agent.age >= agent.minReproductiveAge &&
-        agent.age >= agent.nextReproductionAge
-      ) {
-        agent.reproduce();
+      if (!agent.partner && agent.age >= agent.minReproductiveAge) {
+        if (agent.isMale && femaleLookingForPartner.length > 0) {
+          agent.partner = femaleLookingForPartner[0];
+          femaleLookingForPartner[0].partner = agent;
+          femaleLookingForPartner.splice(0, 1);
+        } else if (!femaleLookingForPartner.includes(agent))
+          femaleLookingForPartner.push(agent);
+      }
+
+      if (agent.partner && agent.age >= agent.nextReproductionAge) {
+        agent.readyToMate = true;
 
         // Schedule next reproduction
         agent.reproductionCooldown = Math.floor(Math.random() * 16 + 5); // 5 to 10
@@ -24,6 +31,10 @@ function updateAllAgents() {
       if (agent.age >= agent.maxAge && !agent.oldAgeDeathStarted) {
         agent.deathTimerStart = currentMillis;
         agent.oldAgeDeathStarted = true;
+        if (!agent.isMale && !agent.partner) {
+          const index = femaleLookingForPartner.indexOf(agent);
+          if (index !== -1) femaleLookingForPartner.splice(index, 1);
+        }
       }
 
       if (agent.waterMemo) {

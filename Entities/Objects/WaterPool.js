@@ -30,7 +30,7 @@ class WaterPool {
     ellipse(0, 0, this.size * 1.2);
 
     // Shimmer effect
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 2; i++) {
       let shimmerX =
         cos(this.time * 0.02 + i * 2 + this.shimmerOffset) * this.size * 0.3;
       let shimmerY =
@@ -55,7 +55,6 @@ class WaterPool {
 
     // Darker edge
     stroke(30, 100, 150, 100);
-    strokeWeight(2);
     noFill();
     ellipse(0, 0, this.size * 2);
 

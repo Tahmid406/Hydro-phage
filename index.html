@@ -22,53 +22,63 @@
     <script src="htmlcontroller.js"></script>
 
     <div class="sidepanel" id="sidepanel">
-      <h2 id="SelectedEntity"></h2>
+      <h2 id="SelectedEntity">Agent</h2>
 
       <div class="stat-item">
-        <div class="stat-label">Activity</div>
-        <div class="stat-value" id="eating-status">
-          <!-- <span class="status-indicator status-inactive"></span> -->
-          Inactive
+        <div class="stat-label">Health</div>
+        <div class="stat-value health-indicator" id="health-indicator">
+          Health: 75%
         </div>
       </div>
 
       <div class="stat-item">
+        <div class="stat-label">Activity</div>
+        <div class="stat-value" id="activity-status">Wandering</div>
+      </div>
+
+      <div class="stat-item">
         <div class="stat-label">Age</div>
-        <div class="stat-value" id="age">0</div>
+        <div class="age-info">
+          <div class="stat-value" id="age">15/100</div>
+          <div class="life-stage" id="life-stage">Adult Male</div>
+        </div>
+      </div>
+
+      <div class="stat-item">
+        <div class="stat-label">Reproductive Status</div>
+        <div class="stat-value" id="reproductive-status">Ready to Mate</div>
       </div>
 
       <div class="stat-item">
         <div class="stat-label">Hunger</div>
-        <div class="bar-container" id="hunger-bar-container">
-          <div class="bar-fill hunger-bar" id="hungerBar" style="width: 50%">
-            <div class="bar-text"></div>
+        <div class="bar-container">
+          <div
+            class="bar-fill"
+            id="hungerBar"
+            style="width: 75%; background-color: #44aa44"
+          >
+            <div class="bar-text">75%</div>
           </div>
         </div>
       </div>
 
       <div class="stat-item">
         <div class="stat-label">Thirst</div>
-        <div class="bar-container" id="thirst-bar-container">
-          <div class="bar-fill thirst-bar" id="thirstBar" style="width: 50%">
-            <div class="bar-text"></div>
+        <div class="bar-container">
+          <div
+            class="bar-fill"
+            id="thirstBar"
+            style="width: 60%; background-color: #4488ff"
+          >
+            <div class="bar-text">60%</div>
           </div>
         </div>
       </div>
 
-      <div class="stat-item">
-        <div class="stat-label">Target</div>
-        <div class="stat-value" id="target-status">None</div>
-      </div>
-
-      <div class="stat-item">
-        <div class="stat-label">Current Speed</div>
-        <div class="stat-value" id="speed">125.4 km/h</div>
-      </div>
-
       <div class="stat-item warning-item" id="deathWarning">
         <div class="stat-label">⚠️ Critical Warning</div>
-        <div class="stat-value" id="death-status">
-          Agent will die in <span id="deathTimer"></span> seconds
+        <div class="stat-value">
+          Agent will die in <span id="deathTimer">15</span>
         </div>
       </div>
     </div>

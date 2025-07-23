@@ -4,73 +4,89 @@ function togglePanel() {
 
   const header = document.getElementById("SelectedEntity");
   header.innerText = "Agent";
+
+  if (currentlySelectedAgent) updateAgentPanel(currentlySelectedAgent);
 }
 
-const activity = (agent) => {
-  const thirsty = agent.water < 50;
-  const hungry = agent.food < 75;
-
-  const isAtWater = agent.target instanceof WaterPool;
-  const isAtFood = agent.target instanceof Plant;
-
-  // Actively drinking
-  if (agent.drinking) return "Drinking Water";
-  // Going to water
-  if (thirsty && isAtWater) return "Moving to Water Pool";
-
-  // Actively eating
-  if (agent.eating) return "Eating Plant";
-  // Going to food
-  if (hungry && isAtFood) return "Moving to Food Source";
-
-  // Searching for resources
-  if (thirsty && hungry) return "Searching for Water and Food Source";
-  if (thirsty) return "Searching for Water Source";
-  if (hungry) return "Searching for Food Source";
-
-  return "Wandering";
-};
-
 function updateAgentPanel(agent) {
-  // Entity title
   document.getElementById("SelectedEntity").innerText = "Agent";
 
-  // Activity status
-  const eating = document.getElementById("eating-status");
-  eating.innerText = activity(agent);
-
-  // Age
-  document.getElementById("age").innerText = agent.age + " months";
-
-  // Hunger
-  const hungerPercent = Math.round(agent.food);
+  // --- Hunger ---
+  const hunger = Math.round(agent.food);
   const hungerBar = document.getElementById("hungerBar");
-  hungerBar.style.width = hungerPercent + "%";
-  hungerBar.querySelector(".bar-text").innerText = hungerPercent + "%";
+  hungerBar.style.width = hunger + "%";
+  hungerBar.querySelector(".bar-text").innerText = hunger + "%";
+  hungerBar.style.backgroundColor =
+    hunger < 20 ? "#ff4444" : hunger < 50 ? "#ffaa44" : "#44aa44";
 
-  // Thirst
-  const thirstPercent = Math.round(agent.water);
+  // --- Thirst ---
+  const thirst = Math.round(agent.water);
   const thirstBar = document.getElementById("thirstBar");
-  thirstBar.style.width = thirstPercent + "%";
-  thirstBar.querySelector(".bar-text").innerText = thirstPercent + "%";
+  thirstBar.style.width = thirst + "%";
+  thirstBar.querySelector(".bar-text").innerText = thirst + "%";
+  thirstBar.style.backgroundColor =
+    thirst < 20 ? "#ff4444" : thirst < 50 ? "#ffaa44" : "#4488ff";
 
-  // Target status
-  const target = document.getElementById("target-status");
-  target.style.color = agent.target ? "#00ff88" : "#ff8844";
-  if (agent.target) target.innerText = agent.target.constructor.name;
-  else target.innerText = "None";
-
-  // Speed
-  document.getElementById("speed").innerText =
-    agent.vel.mag().toFixed(2) + " km/h";
-
-  // Warning
-  const warningContainer = document.getElementById("deathWarning");
-  warningContainer.style.display = "None";
-  if (agent.deathTimerStart || agent.oldAgeDeathStarted) {
-    warningContainer.style.display = "block";
-    document.getElementById("deathTimer").innerText = `${Math.round(
-      agent.timeBeforeDeath / 1000
-    )} s`;
+  // --- Age & Life Stage ---
+  document.getElementById("age").innerText = `${agent.age} months`;
+  const lifeStage = document.getElementById("life-stage");
+  if (agent.age < agent.minReproductiveAge) {
+    lifeStage.innerText = "Juvenile";
+    lifeStage.style.color = "#88ccff";
+  } else if (agent.age < agent.maxAge * 0.8) {
+    lifeStage.innerText = agent.isMale ? "Adult Male" : "Adult Female";
+    lifeStage.style.color = agent.isMale ? "#4488ff" : "#ff88cc";
+  } else {
+    lifeStage.innerText = "Elder";
+    lifeStage.style.color = "#cccccc";
   }
+
+  // --- Activity ---
+  const activity = document.getElementById("activity-status");
+  if (agent.mating && agent.partner) activity.innerText = "Mating";
+  else if (agent.eating) activity.innerText = "Eating";
+  else if (agent.drinking) activity.innerText = "Drinking";
+  else if (agent.target instanceof Agent) activity.innerText = "Seeking Mate";
+  else if (agent.target?.constructor?.name === "WaterPool")
+    activity.innerText = "Seeking Water";
+  else if (agent.target?.constructor?.name === "FoodPellet")
+    activity.innerText = "Seeking Food";
+  else activity.innerText = "Wandering";
+
+  // --- Reproductive Status ---
+  const repro = document.getElementById("reproductive-status");
+  if (agent.age < agent.minReproductiveAge) {
+    repro.innerText = `Matures in ${
+      agent.minReproductiveAge - agent.age
+    } months`;
+  } else if (agent.readyToMate) {
+    repro.innerText = "Ready to Mate";
+  } else if (agent.age < agent.nextReproductionAge) {
+    repro.innerText = "In Cooldown";
+  } else {
+    repro.innerText = "Not Fertile";
+  }
+
+  // --- Death Warning ---
+  const warning = document.getElementById("deathWarning");
+  if (agent.deathTimerStart || agent.oldAgeDeathStarted) {
+    warning.style.display = "block";
+    const timeLeft = Math.round(agent.timeBeforeDeath / 1000);
+    document.getElementById("deathTimer").innerText = `${timeLeft}s`;
+
+    if (timeLeft < 3) warning.style.backgroundColor = "#ff0000";
+    else if (timeLeft < 10) warning.style.backgroundColor = "#ff4444";
+    else warning.style.backgroundColor = "#ff8844";
+  } else {
+    warning.style.display = "none";
+  }
+
+  // --- Health ---
+  const health = Math.round((agent.food + agent.water) / 2);
+  const healthText = document.getElementById("health-indicator");
+  healthText.innerText = `Health: ${health}%`;
+  if (health < 20) healthText.style.color = "#ff4444";
+  else if (health < 50) healthText.style.color = "#ffaa44";
+  else if (health < 80) healthText.style.color = "#ffff44";
+  else healthText.style.color = "#44ff44";
 }

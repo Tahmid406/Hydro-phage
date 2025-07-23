@@ -46,3 +46,9 @@ function updateGridVisibility() {
     }
   }
 }
+
+setInterval(() => {
+  if (currentlySelectedAgent && currentlySelectedAgent.alive) {
+    updateAgentPanel(currentlySelectedAgent);
+  }
+}, 1000); // runs every 1 second

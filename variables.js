@@ -19,8 +19,11 @@ let clickThreshold = 10;
 //===== Entity Settings =====
 const totalAgents = 16;
 const agentCleanupInterval = 5000;
+
 let agents = [];
 let lastAgentCleanupTime = 0;
+
+let femaleLookingForPartner = [];
 
 //===== World Item Settings =====
 const maxPlants = 240;

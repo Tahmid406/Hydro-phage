@@ -9,12 +9,19 @@ class Agent {
     this.food = 20;
     this.water = 20;
 
+    this.isMale = random() < 0.5;
+    this.partner = null;
+    this.readyToMate = false;
+    this.mating = false;
+    this.matingTimeout = 2000;
+    this.matingStartTime = null;
+
     this.age = 0;
     this.minReproductiveAge = Math.floor(random(16, 25));
     this.reproductionCooldown = Math.floor(random(5, 16));
     this.nextReproductionAge = this.age + this.reproductionCooldown;
 
-    this.maxAge = Math.floor(random(36, 48));
+    this.maxAge = Math.floor(random(48, 60));
     this.oldAgeDeathStarted = false;
 
     this.alive = true;
@@ -90,9 +97,13 @@ class Agent {
       // Select appropriate action
       if (target instanceof WaterPool)
         this.drinking = true; // flag to distinguish
-      else this.eating = target;
-
-      return;
+      else if (target instanceof Plant) this.eating = target;
+      else {
+        this.matingStartTime = currentMillis;
+        this.mating = true;
+        this.target.matingStartTime = currentMillis;
+        this.target.mating = true;
+      }
     } else {
       dir.normalize();
       let speedFactor = constrain(
@@ -106,12 +117,44 @@ class Agent {
     }
   }
 
+  mate() {
+    if (
+      currentMillis - this.matingStartTime >= this.matingTimeout &&
+      this.mating
+    ) {
+      this.mating = false;
+      this.partner.mating = false;
+      this.readyToMate = false;
+      this.partner.readyToMate = false;
+      this.target = null;
+      this.partner.target = null;
+      this.vel.add(p5.Vector.random2D().setMag(1));
+      this.partner.vel.add(p5.Vector.random2D().setMag(1));
+    }
+  }
+
   reproduce() {
-    // You can tweak the spawn position to be nearby
-    const spawnPos = this.pos.copy().add(p5.Vector.random2D().mult(10));
-    const newAgent = new Agent(spawnPos); // Or whatever your constructor takes
-    newAgent.waterMemo = this.waterMemo;
-    agents.push(newAgent);
+    // 1. Courtship / Mating Animation Trigger
+    this.mate();
+    // 2. At the end of mating, this.mating will be turned false in this.mate() and new agents will be born
+    if (!this.mating) {
+      this.partner.food -= 10;
+      this.partner.water -= 15;
+      for (let i = 0; i < Math.floor(random() * 3 + 1); i++) {
+        const agent = new Agent(
+          createVector(this.partner.pos.x, this.partner.pos.y)
+        );
+        agent.waterMemo = this.partner.waterMemo;
+        agents.push(agent);
+      }
+
+      // Schedule next reproduction
+      this.reproductionCooldown = Math.floor(Math.random() * 6 + 5);
+      this.nextReproductionAge = this.age + this.reproductionCooldown;
+      this.partner.reproductionCooldown = Math.floor(Math.random() * 6 + 5);
+      this.partner.nextReproductionAge =
+        this.age + this.partner.reproductionCooldown;
+    }
   }
 
   eatPlant() {
@@ -147,12 +190,20 @@ class Agent {
     const idxWorld = agents.indexOf(this);
     if (idxWorld !== -1) agents.splice(idxWorld, 1);
 
+    if (this.partner) {
+      this.partner.partner = null;
+      this.partner = null;
+    }
+
     if (this.debug) currentlySelectedAgent = null;
     togglePanel();
   }
 
   update() {
-    if (this.debug) updateAgentPanel(this);
+    if (this.mating) {
+      this.reproduce();
+      return;
+    }
 
     // Start/Stop Death Sequence
     if (this.deathTimerStart || this.oldAgeDeathStarted) {
@@ -166,7 +217,7 @@ class Agent {
     else if (this.deathTimerStart && this.food > 0 && this.water > 0)
       this.deathTimerStart = null;
 
-    // Eat
+    // Eat or Drink
     if (this.eating) {
       this.eatPlant();
       return;
@@ -175,8 +226,12 @@ class Agent {
       return;
     }
 
+    if (this.partner && this.readyToMate && this.partner.readyToMate) {
+      if (this.target) this.moveTowards(this.target);
+      else this.target = this.partner;
+    }
     // If thirsty, drink
-    if (
+    else if (
       this.water < 25 &&
       this.waterMemo
       // this.food > 5
@@ -225,12 +280,13 @@ class Agent {
   }
 
   refreshTarget() {
+    if (this.debug) updateAgentPanel(this);
     if (this.target && this.target.nutrition < 0.1) this.target = null;
-    if (!this.target || this.target.nutrition < 0.1) {
-      if (this.vel.mag() < 1 && this.vel.mag() > 0.0001) {
-        this.vel.setMag(1);
-      }
-    }
+    else if (this.target instanceof Agent && !this.target.alive)
+      this.target = null;
+    if (this.partner && !this.partner.alive) this.partner = null;
+    if ((!this.target || this.target.nutrition < 0.1) && this.vel.mag() < 1)
+      this.vel.setMag(1);
   }
 
   drawBasicCharacter() {
@@ -246,9 +302,8 @@ class Agent {
     let bodyBright = map(healthRatio, 0, 1, 40, 90); // Brighter when healthy
 
     // Reproductive glow
-    if (reproductiveAge && this.age >= this.nextReproductionAge) {
+    if (reproductiveAge && this.age >= this.nextReproductionAge)
       bodyBright = min(100, bodyBright + 15);
-    }
 
     // Dynamic size based on health and age
     let dynamicSize =
@@ -365,6 +420,57 @@ class Agent {
     pop();
   }
 
+  drawMatingAnimation() {
+    if (!this.partner || !this.matingStartTime) return;
+
+    const matingProgress =
+      (currentMillis - this.matingStartTime) / this.matingTimeout;
+    const time = currentMillis * 0.01;
+
+    push();
+    translate(this.pos.x, this.pos.y);
+
+    const distance = dist(
+      this.pos.x,
+      this.pos.y,
+      this.partner.pos.x,
+      this.partner.pos.y
+    );
+
+    // === Phase 1: Aura Pulse ===
+    if (matingProgress < 0.4) {
+      const pulseSize = this.size * (1.5 + sin(time) * 0.3);
+      fill(this.isMale ? color(280, 60, 100, 40) : color(340, 60, 100, 40));
+      noStroke();
+      ellipse(0, 0, pulseSize);
+    }
+
+    // === Phase 2: Heart Between Partners ===
+    else if (matingProgress < 0.8 && distance < this.size * 4) {
+      stroke(255, 100, 150, 120);
+      strokeWeight(2);
+      line(
+        0,
+        0,
+        this.partner.pos.x - this.pos.x,
+        this.partner.pos.y - this.pos.y
+      );
+
+      // Simple floating heart
+      const heartOffset = sin(time) * 10;
+      const heartX = (this.partner.pos.x - this.pos.x) / 2;
+      const heartY = (this.partner.pos.y - this.pos.y) / 2 + heartOffset;
+
+      fill(255, 100, 150, 180);
+      noStroke();
+      ellipse(heartX - 3, heartY, 6, 6);
+      ellipse(heartX + 3, heartY, 6, 6);
+      triangle(heartX - 6, heartY, heartX + 6, heartY, heartX, heartY + 8);
+    }
+
+    pop();
+  }
+
   drawDebugInfo() {
     // Show current grid
     // if (this.currentGrid) {
@@ -384,11 +490,10 @@ class Agent {
       const tipY = this.pos.y + sin(this.heading) * this.size;
 
       push();
-      if (this.target instanceof Plant) {
+      if (this.target instanceof Plant)
         stroke(0, 255, 0, 100); // Green line to food
-      } else {
-        stroke(52, 152, 219, 100); // Blue line to water
-      }
+      else stroke(52, 152, 219, 100); // Blue line to water
+
       line(tipX, tipY, this.target.pos.x, this.target.pos.y);
       pop();
     }
@@ -409,11 +514,17 @@ class Agent {
     text(`Speed:${this.vel.mag().toFixed(1)}`, statsX, statsY + 24);
     pop();
 
-    push();
     //Show memoized water location
+    push();
     if (this.waterMemo) {
       stroke(100, 200, 255, 20);
       line(this.pos.x, this.pos.y, this.waterMemo.pos.x, this.waterMemo.pos.y);
+    }
+
+    //Show partner
+    if (this.partner) {
+      stroke(255, 0, 0, 20);
+      line(this.pos.x, this.pos.y, this.partner.pos.x, this.partner.pos.y);
     }
 
     // Show proximity radius
@@ -436,15 +547,17 @@ class Agent {
   draw() {
     // Draw basic character
     this.drawBasicCharacter();
+    // if (this.partner) {
+    //   stroke(255, 0, 0);
+    //   line(this.pos.x, this.pos.y, this.partner.pos.x, this.partner.pos.y);
+    // }
+
+    if (this.mating) this.drawMatingAnimation();
 
     // Draw eating/drinking animations if active
-    if (this.eating || this.drinking) {
-      this.drawFeedingAnimation();
-    }
+    if (this.eating || this.drinking) this.drawFeedingAnimation();
 
     // Draw debug info if enabled
-    if (this.debug) {
-      this.drawDebugInfo();
-    }
+    if (this.debug) this.drawDebugInfo();
   }
 }
