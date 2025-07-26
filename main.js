@@ -24,9 +24,11 @@ function setup() {
 
   //===== Generate Agents =====
   for (let i = 0; i < totalAgents; i++) {
-    let agent = new Agent(
+    const agent = new Agent(
       createVector(random(arenaWidth), random(arenaHeight))
     );
+    agent.food = 100;
+    agent.water = 100;
     agents.push(agent);
   }
 

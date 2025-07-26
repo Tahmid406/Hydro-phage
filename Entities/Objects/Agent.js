@@ -8,6 +8,7 @@ class Agent {
     this.heading = 0;
     this.food = 20;
     this.water = 20;
+    this.intakeMultiplier = 2;
 
     this.isMale = random() < 0.5;
     this.partner = null;
@@ -107,7 +108,7 @@ class Agent {
     } else {
       dir.normalize();
       let speedFactor = constrain(
-        map(distance, 250, target.size, this.maxSpeed, 0),
+        map(distance, 250, target.size, this.maxSpeed, this.maxSpeed / 4),
         0.15,
         this.maxSpeed
       );
@@ -123,13 +124,15 @@ class Agent {
       this.mating
     ) {
       this.mating = false;
-      this.partner.mating = false;
       this.readyToMate = false;
-      this.partner.readyToMate = false;
       this.target = null;
-      this.partner.target = null;
       this.vel.add(p5.Vector.random2D().setMag(1));
-      this.partner.vel.add(p5.Vector.random2D().setMag(1));
+      if (this.partner) {
+        this.partner.mating = false;
+        this.partner.vel.add(p5.Vector.random2D().setMag(1));
+        this.partner.readyToMate = false;
+        this.partner.target = null;
+      }
     }
   }
 
@@ -138,27 +141,29 @@ class Agent {
     this.mate();
     // 2. At the end of mating, this.mating will be turned false in this.mate() and new agents will be born
     if (!this.mating) {
-      this.partner.food -= 10;
-      this.partner.water -= 15;
-      for (let i = 0; i < Math.floor(random() * 3 + 1); i++) {
-        const agent = new Agent(
-          createVector(this.partner.pos.x, this.partner.pos.y)
-        );
-        agent.waterMemo = this.partner.waterMemo;
-        agents.push(agent);
-      }
-
       // Schedule next reproduction
       this.reproductionCooldown = Math.floor(Math.random() * 6 + 5);
       this.nextReproductionAge = this.age + this.reproductionCooldown;
-      this.partner.reproductionCooldown = Math.floor(Math.random() * 6 + 5);
-      this.partner.nextReproductionAge =
-        this.age + this.partner.reproductionCooldown;
+
+      if (this.partner) {
+        this.partner.food -= 10;
+        this.partner.water -= 15;
+        for (let i = 0; i < Math.floor(random() * 3 + 1); i++) {
+          const agent = new Agent(
+            createVector(this.partner.pos.x, this.partner.pos.y)
+          );
+          agent.waterMemo = this.partner.waterMemo;
+          agents.push(agent);
+        }
+        this.partner.reproductionCooldown = Math.floor(Math.random() * 6 + 5);
+        this.partner.nextReproductionAge =
+          this.age + this.partner.reproductionCooldown;
+      }
     }
   }
 
   eatPlant() {
-    this.food += 0.25;
+    this.food += 0.25 * this.intakeMultiplier;
     this.eating.deplete();
     // When done eating
     if (this.eating.nutrition <= 0 || this.food >= 100) {
@@ -169,7 +174,7 @@ class Agent {
     }
   }
   drinkWater() {
-    this.water += 0.25;
+    this.water += 0.25 * this.intakeMultiplier;
     // When done eating
     if (this.water >= 100) {
       this.target = null;
@@ -232,7 +237,7 @@ class Agent {
     }
     // If thirsty, drink
     else if (
-      this.water < 25 &&
+      this.water < 50 &&
       this.waterMemo
       // this.food > 5
       // this.proximity.danger.length === 0
@@ -242,7 +247,7 @@ class Agent {
     }
     // Else, eat if hungry and safe
     else if (
-      this.food < 50 &&
+      this.food < 75 &&
       this.proximity.food.length > 0
       // this.water > 5
       // this.proximity.danger.length === 0
@@ -269,8 +274,8 @@ class Agent {
     // this.proximity.danger = this.lookForDanger(); //async look for danger
 
     // Gradually increase hunger
-    this.food -= 0.02;
-    this.water -= 0.03;
+    this.food -= 0.015;
+    this.water -= 0.0225;
 
     // Arena boundary checks
     if (this.pos.x > arenaWidth && this.vel.x > 0) this.vel.x *= -1;

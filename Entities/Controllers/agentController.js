@@ -7,7 +7,17 @@ function updateAllAgents() {
   if (currentMillis - lastAgentCleanupTime > agentCleanupInterval) {
     for (let agent of agents) {
       agent.refreshTarget();
+
+      // --- Aging Logic ---
       agent.age += 1;
+      if (agent.age <= agent.minReproductiveAge)
+        agent.intakeMultiplier = map(
+          agent.age,
+          0,
+          agent.minReproductiveAge,
+          2,
+          1
+        );
 
       // --- Reproduction Logic ---
       if (!agent.partner && agent.age >= agent.minReproductiveAge) {
